@@ -1,5 +1,6 @@
 import os
 import logging
+import json
 import requests
 from flask import Flask, request, jsonify
 
@@ -11,84 +12,122 @@ SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
 if not SLACK_BOT_TOKEN:
     raise ValueError("Slack Bot Token이 설정되지 않았습니다. 환경변수 확인 필요")
 
+SLACK_API_URL = "https://slack.com/api"
+TARGET_CHANNEL = "#your-channel"  # 메시지 보낼 채널을 변경
+
+app = Flask(__name__)
 
 def get_all_members():
     logger.info("Slack 전체 멤버 조회 시작")
-
-    base_url = "https://slack.com/api/users.list"
-    headers = {
-        "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-
+    base_url = f"{SLACK_API_URL}/users.list"
+    headers = {"Authorization": f"Bearer {SLACK_BOT_TOKEN}"}
     all_members = []
     cursor = None
-
     while True:
         params = {"limit": 1000}
         if cursor:
             params["cursor"] = cursor
-
         try:
             response = requests.get(base_url, headers=headers, params=params)
             response.raise_for_status()
         except Exception as e:
             logger.error("멤버 조회 실패: %s", str(e))
             break
-
         data = response.json()
         if not data.get("ok", False):
             logger.error("Slack API 오류: %s", data.get("error"))
             break
-
-        members = data.get("members", [])
-        logger.info("📦 받은 멤버 수: %d", len(members))
-        all_members.extend(members)
-
-        # 다음 페이지 cursor 확인
+        all_members.extend(data.get("members", []))
         cursor = data.get("response_metadata", {}).get("next_cursor")
         if not cursor:
             break
-
     logger.info("전체 멤버 수: %d", len(all_members))
     return all_members
 
-
-app = Flask(__name__)
+def open_create_new_work_modal(trigger_id):
+    modal_view = {
+        "type": "modal",
+        "callback_id": "work_create_modal",
+        "title": {"type": "plain_text", "text": "새 업무 등록"},
+        "submit": {"type": "plain_text", "text": "등록"},
+        "close": {"type": "plain_text", "text": "취소"},
+        "blocks": [
+            {"type": "input", "block_id": "title", "element": {"type": "plain_text_input", "action_id": "title_input"}, "label": {"type": "plain_text", "text": "제목"}},
+            {"type": "input", "block_id": "content", "element": {"type": "plain_text_input", "action_id": "content_input", "multiline": True}, "label": {"type": "plain_text", "text": "내용"}},
+            {"type": "input", "block_id": "period", "element": {"type": "plain_text_input", "action_id": "period_input"}, "label": {"type": "plain_text", "text": "기간"}},
+            {"type": "input", "block_id": "plan_url", "optional": True, "element": {"type": "plain_text_input", "action_id": "plan_url_input"}, "label": {"type": "plain_text", "text": "기획서 (URL)"}},
+            {"type": "input", "block_id": "assignee", "element": {"type": "plain_text_input", "action_id": "assignee_input"}, "label": {"type": "plain_text", "text": "담당자 (실명)"}}
+        ]
+    }
+    payload = {"trigger_id": trigger_id, "view": modal_view}
+    headers = {"Authorization": f"Bearer {SLACK_BOT_TOKEN}", "Content-Type": "application/json; charset=utf-8"}
+    response = requests.post(f"{SLACK_API_URL}/views.open", headers=headers, json=payload)
+    logger.info("Modal open response: %s", response.text)
+    return response.json()
 
 @app.route("/slack/command", methods=["POST"])
-def hi_slash_command():
+def slash_command_router():
     data = request.form.to_dict()
+    command_text = data.get("command")
     user_name = data.get("user_name", "Guest")
-
+    trigger_id = data.get("trigger_id")
     logger.info(f"Slash Command 요청: {data}")
 
-    # 전체 멤버 조회
-    members = get_all_members()
+    if command_text == "/hi":
+        members = get_all_members()
+        mentions = [f"<@{m.get('id')}> HI" for m in members if not m.get("deleted") and not m.get("is_bot")]
+        MAX_CHARS = 3000
+        mentions_text = "\n".join(mentions)
+        if len(mentions_text) > MAX_CHARS:
+            mentions_text = mentions_text[:MAX_CHARS] + "\n... (이하 생략)"
+        response_text = f"hi {user_name}! 전체 멤버에게 인사합니다:\n{mentions_text}"
+        logger.info(f"응답 메시지 길이: {len(response_text)}")
+        return jsonify({"response_type": "in_channel", "text": response_text})
 
-    # 각 멤버에게 태그 붙여서 HI 메시지 만들기
-    mentions = []
-    for m in members:
-        if m.get("deleted") or m.get("is_bot"):  # 봇/삭제 계정 제외
-            continue
-        user_id = m.get("id")
-        if user_id:
-            mentions.append(f"<@{user_id}> HI")
+    elif command_text == "/CreateNewWork":
+        if trigger_id:
+            modal_resp = open_create_new_work_modal(trigger_id)
+            if not modal_resp.get("ok"):
+                logger.error(f"Modal open 실패: {modal_resp.get('error')}")
+                return jsonify({"response_type": "ephemeral", "text": f"모달을 띄우는 데 실패했습니다: {modal_resp.get('error')}"})
+            return "", 200
+        return jsonify({"response_type": "ephemeral", "text": "trigger_id가 없습니다. Slack 인터랙티브 명령에서만 동작합니다."})
 
-    # Slack 메시지 길이 제한 고려
-    MAX_CHARS = 3000
-    mentions_text = "\n".join(mentions)
-    if len(mentions_text) > MAX_CHARS:
-        mentions_text = mentions_text[:MAX_CHARS] + "\n... (이하 생략)"
+    return jsonify({"response_type": "ephemeral", "text": f"알 수 없는 커맨드({command_text})입니다."})
 
-    response_text = f"hi {user_name}! 전체 멤버에게 인사합니다:\n{mentions_text}"
-    logger.info(f"응답 메시지 길이: {len(response_text)}")
+@app.route("/slack/interactions", methods=["POST"])
+def interactions():
+    payload_str = request.form.get("payload")
+    if not payload_str:
+        return "", 400
+    data = json.loads(payload_str)
 
-    return jsonify({
-        "response_type": "in_channel",  # 채널 전체 공개
-        "text": response_text
-    })
+    if data.get("type") == "view_submission" and data.get("view", {}).get("callback_id") == "work_create_modal":
+        state_values = data["view"]["state"]["values"]
+        title = state_values["title"]["title_input"]["value"]
+        content = state_values["content"]["content_input"]["value"]
+        period = state_values["period"]["period_input"]["value"]
+        plan_url = state_values["plan_url"]["plan_url_input"].get("value", "")
+        assignee = state_values["assignee"]["assignee_input"]["value"]
 
+        message = (
+            f"*새 업무 등록*\n"
+            f"• 제목: {title}\n"
+            f"• 내용: {content}\n"
+            f"• 기간: {period}\n"
+            f"• 기획서: {plan_url}\n"
+            f"• 담당자: {assignee}"
+        )
+
+        headers = {"Authorization": f"Bearer {SLACK_BOT_TOKEN}", "Content-type": "application/json"}
+        payload = {"channel": TARGET_CHANNEL, "text": message}
+        resp = requests.post(f"{SLACK_API_URL}/chat.postMessage", headers=headers, json=payload)
+        logger.info(f"chat.postMessage status: {resp.status_code}, response:{resp.text}")
+
+        # modal 닫힘 위해 빈 json 응답
+        return jsonify({})
+
+    return "", 200
 
 if __name__ == "__main__":
     logging.info("🚀 Flask Slack Command Server Started on port 5000")
