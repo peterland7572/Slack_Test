@@ -56,7 +56,22 @@ def open_create_new_work_modal(trigger_id):
             {"type": "input", "block_id": "content", "element": {"type": "plain_text_input", "action_id": "content_input", "multiline": True}, "label": {"type": "plain_text", "text": "내용"}},
             {"type": "input", "block_id": "period", "element": {"type": "plain_text_input", "action_id": "period_input"}, "label": {"type": "plain_text", "text": "기간"}},
             {"type": "input", "block_id": "plan_url", "optional": True, "element": {"type": "plain_text_input", "action_id": "plan_url_input"}, "label": {"type": "plain_text", "text": "기획서 (URL)"}},
-            {"type": "input", "block_id": "assignee", "element": {"type": "plain_text_input", "action_id": "assignee_input"}, "label": {"type": "plain_text", "text": "담당자 (실명)"}}
+            {
+                "type": "input",
+                "block_id": "assignee",
+                "element": {
+                    "type": "users_select",  # 사용자 선택 드롭다운
+                    "action_id": "assignee_input",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "담당자를 선택하세요"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "담당자 (실명)"
+                }
+            }
         ]
     }
     payload = {"trigger_id": trigger_id, "view": modal_view}
@@ -124,7 +139,8 @@ def interactions():
         content = state_values["content"]["content_input"]["value"]
         period = state_values["period"]["period_input"]["value"]
         plan_url = state_values["plan_url"]["plan_url_input"].get("value", "")
-        assignee = state_values["assignee"]["assignee_input"]["value"]
+        assignee_user_id = state_values["assignee"]["assignee_input"]["selected_user"]
+        mention_text = f"<@{assignee_user_id}>"
 
         message = (
             f"*새 업무 등록*\n"
@@ -132,7 +148,7 @@ def interactions():
             f"• 내용: {content}\n"
             f"• 기간: {period}\n"
             f"• 기획서: {plan_url}\n"
-            f"• 담당자: {assignee}"
+            f"• 담당자: {mention_text}"
         )
 
         headers = {"Authorization": f"Bearer {SLACK_BOT_TOKEN}", "Content-type": "application/json"}
