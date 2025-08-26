@@ -23,7 +23,6 @@ def get_all_members():
         "Content-Type": "application/x-www-form-urlencoded"
     }
 
-    yes = None
     all_members = []
     cursor = None
 
