@@ -13,7 +13,7 @@ if not SLACK_BOT_TOKEN:
     raise ValueError("Slack Bot Token이 설정되지 않았습니다. 환경변수 확인 필요")
 
 SLACK_API_URL = "https://slack.com/api"
-TARGET_CHANNEL = "#업무생성채널"  # 메시지 보낼 채널을 변경
+TARGET_CHANNEL = "C09C4S28412" # #업무생성채널  # 메시지 보낼 채널을 변경
 
 app = Flask(__name__)
 
