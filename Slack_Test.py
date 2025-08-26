@@ -20,7 +20,7 @@ def get_all_members():
     base_url = "https://slack.com/api/users.list"
     headers = {
         "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
-        "Content-Type": ""application/x-www-form-urlencoded"
+        "Content-Type": "application/x-www-form-urlencoded"
     }
 
 
