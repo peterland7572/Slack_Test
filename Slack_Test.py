@@ -95,7 +95,7 @@ def slash_command_router():
         logger.info(f"응답 메시지 길이: {len(response_text)}")
         return jsonify({"response_type": "in_channel", "text": response_text})
 
-    elif command_text == "/CreateNewWork":
+    elif command_text == "/create_new_work":
         if trigger_id:
             modal_resp = open_create_new_work_modal(trigger_id)
             if not modal_resp.get("ok"):
