@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s")
 
-SLACK_BOT_TOKEN = "gJ6icnO8M8aiXCl12YQ49bg4"  # Slack Bot Token
+SLACK_BOT_TOKEN = "xoxb-8662905006513-9407437095186-RfEXGMdAIZlsftOhN1NAJzfI"  # Slack Bot Token
 
 def get_all_members():
     logger.info("Slack 전체 멤버 조회 시작")
