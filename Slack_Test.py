@@ -18,6 +18,9 @@ def get_all_members():
         "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
         "Content-Type": "application/json"
     }
+
+
+
     all_members = []
     cursor = None
 
