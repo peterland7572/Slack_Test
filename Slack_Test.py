@@ -65,6 +65,17 @@ def open_create_new_work_modal(trigger_id):
     logger.info("Modal open response: %s", response.text)
     return response.json()
 
+
+@app.before_request
+def log_request_info():
+    logger.info(f"Received request: {request.method} {request.path} from {request.remote_addr}")
+
+@app.errorhandler(404)
+def page_not_found(e):
+    logger.warning(f"404 Not Found: {request.method} {request.path} from {request.remote_addr}")
+    return "요청한 URL이 존재하지 않습니다.", 404
+
+
 @app.route("/slack/command", methods=["POST"])
 def slash_command_router():
     data = request.form.to_dict()
