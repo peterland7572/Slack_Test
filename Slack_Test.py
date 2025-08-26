@@ -108,11 +108,13 @@ def slash_command_router():
 
 @app.route("/slack/interactions", methods=["POST"])
 def interactions():
+    logger.info(f"interactions")
     payload_str = request.form.get("payload")
+    logger.info(f"interactions1")
     if not payload_str:
         return "", 400
     data = json.loads(payload_str)
-
+    logger.info(f"interactions2")
     if data.get("type") == "view_submission" and data.get("view", {}).get("callback_id") == "work_create_modal":
         state_values = data["view"]["state"]["values"]
         title = state_values["title"]["title_input"]["value"]
