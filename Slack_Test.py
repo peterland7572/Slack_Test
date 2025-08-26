@@ -1,4 +1,3 @@
-import os
 import logging
 import requests
 
@@ -9,10 +8,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s")
 
-SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
-if not SLACK_BOT_TOKEN:
-    raise ValueError("Slack Bot Token이 설정되지 않았습니다. 환경변수 확인 필요")
-    
+SLACK_BOT_TOKEN = "xoxb-8662905006513-9407437095186-RfEXGMdAIZlsftOhN1NAJzfI"  # Slack Bot Token
 
 def get_all_members():
     logger.info("Slack 전체 멤버 조회 시작")
@@ -20,11 +16,8 @@ def get_all_members():
     base_url = "https://slack.com/api/users.list"
     headers = {
         "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Content-Type": "application/json"
     }
-
-
-
     all_members = []
     cursor = None
 
