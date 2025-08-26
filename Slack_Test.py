@@ -22,6 +22,9 @@ def get_all_members():
         "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
         "Content-Type": "application/x-www-form-urlencoded"
     }
+
+
+
     all_members = []
     cursor = None
 
