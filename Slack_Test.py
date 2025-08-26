@@ -96,8 +96,11 @@ def slash_command_router():
         return jsonify({"response_type": "in_channel", "text": response_text})
 
     elif command_text == "/create_new_work":
+        logger.info(f"/create_new_work")
         if trigger_id:
+            logger.info(f"/create_new_work1")
             modal_resp = open_create_new_work_modal(trigger_id)
+            logger.info(f"/create_new_work2")
             if not modal_resp.get("ok"):
                 logger.error(f"Modal open 실패: {modal_resp.get('error')}")
                 return jsonify({"response_type": "ephemeral", "text": f"모달을 띄우는 데 실패했습니다: {modal_resp.get('error')}"})
