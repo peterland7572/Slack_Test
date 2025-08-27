@@ -16,19 +16,19 @@ SLACK_API_URL = "https://slack.com/api"
 
 # 업무 유형 → 슬랙 채널 ID 매핑 (예시, 실제 채널 ID로 변경 필요)
 CHANNEL_MAP = {
-    "client_task": "C1234567890",
-    "planning_task": "C2345678901",
-    "qa_task": "C3456789012",
-    "character_task": "C4567890123",
-    "background_task": "C5678901234",
-    "concept_task": "C6789012345",
-    "animation_task": "C7890123456",
-    "effect_task": "C8901234567",
-    "art_task": "C9012345678",
-    "server_task": "C0123456789",
-    "ta_task": "C1123456789",
-    "test_task": "C2123456789",
-    "ui_task": "C3123456789"
+    "client_task": "C09C4S28412",
+    "planning_task": "C09C4S28412",
+    "qa_task": "C09C4S28412",
+    "character_task": "C09C4S28412",
+    "background_task": "C09C4S28412",
+    "concept_task": "C09C4S28412",
+    "animation_task": "C09C4S28412",
+    "effect_task": "C09C4S28412",
+    "art_task": "C09C4S28412",
+    "server_task": "C09C4S28412",
+    "ta_task": "C09C4S28412",
+    "test_task": "C09C4S28412",
+    "ui_task": "C09C4S28412"
 }
 
 # 기본 채널을 client_task 채널로 지정
@@ -183,9 +183,7 @@ def slash_command_router():
     elif command_text == "/create_new_work":
         logger.info(f"/create_new_work")
         if trigger_id:
-            logger.info(f"/create_new_work1")
             modal_resp = open_create_new_work_modal(trigger_id)
-            logger.info(f"/create_new_work2")
             if not modal_resp.get("ok"):
                 logger.error(f"Modal open 실패: {modal_resp.get('error')}")
                 return jsonify(
@@ -209,11 +207,12 @@ def slash_command_router():
 
 @app.route("/slack/interactions", methods=["POST"])
 def interactions():
+    logger.info(f"interactions1")
     payload_str = request.form.get("payload")
     if not payload_str:
         return "", 400
     data = json.loads(payload_str)
-
+    logger.info(f"interactions2")
     if data.get("type") == "view_submission" and data.get("view", {}).get("callback_id") == "work_create_modal":
         state_values = data["view"]["state"]["values"]
 
@@ -242,7 +241,7 @@ def interactions():
 
         response = requests.post(f"{SLACK_API_URL}/chat.postMessage", headers=headers, json=payload)
         if response.status_code == 200:
-            logger.info("Slack 메시지 전송 성공")
+            logger.info("신규 잡 메시지 전송 성공")
             return jsonify({"response_action": "clear"})
         else:
             logger.error(f"Slack 메시지 전송 실패: {response.text}")
