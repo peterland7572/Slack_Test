@@ -227,6 +227,82 @@ def slash_command_router():
                 "text": "trigger_id가 없습니다. Slack 인터랙티브 명령에서만 동작합니다.",
             }
         )
+    elif command_text == "/모임요청":
+        logger.info("/모임요청 진입")
+
+        modal_view = {
+            "type": "modal",
+            "callback_id": "meeting_review_modal",
+            "title": {"type": "plain_text", "text": "모임요청"},
+            "submit": {"type": "plain_text", "text": "보내기"},
+            "close": {"type": "plain_text", "text": "취소"},
+            "blocks": [
+                {
+                    "type": "input",
+                    "block_id": "assignee",
+                    "element": {
+                        "type": "multi_users_select",
+                        "action_id": "assignee_input",
+                        "placeholder": {"type": "plain_text", "text": "담당자를 선택하세요"},
+                    },
+                    "label": {"type": "plain_text", "text": "담당자"},
+                    "optional": False,
+                },
+                {
+                    "type": "input",
+                    "block_id": "title",
+                    "element": {
+                        "type": "plain_text_input",
+                        "action_id": "title_input",
+                    },
+                    "label": {"type": "plain_text", "text": "제목"},
+                    "optional": False,
+                },
+                {
+                    "type": "input",
+                    "block_id": "document",
+                    "element": {
+                        "type": "plain_text_input",
+                        "action_id": "document_input",
+                    },
+                    "label": {"type": "plain_text", "text": "기획서 링크"},
+                    "optional": True,
+                },
+                {
+                    "type": "input",
+                    "block_id": "content",
+                    "element": {
+                        "type": "plain_text_input",
+                        "action_id": "content_input",
+                        "multiline": True,
+                    },
+                    "label": {"type": "plain_text", "text": "내용"},
+                    "optional": True,
+                },
+            ],
+        }
+
+        headers = {
+            "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
+            "Content-Type": "application/json; charset=utf-8",
+        }
+        payload = {
+            "trigger_id": trigger_id,
+            "view": modal_view,
+        }
+
+        response = requests.post(f"{SLACK_API_URL}/views.open", headers=headers, json=payload)
+        logger.info(f"모임요청 모달 열기 응답: {response.text}")
+
+        if response.status_code == 200 and response.json().get("ok"):
+            return "", 200
+        else:
+            error_msg = response.json().get("error", "알 수 없는 오류")
+            logger.error(f"모임요청 모달 열기 실패: {error_msg}")
+            return jsonify({
+                "response_type": "ephemeral",
+                "text": f"모임 요청 모달을 띄우는 데 실패했습니다: {error_msg}"
+            }), 500
 
     return jsonify(
         {"response_type": "ephemeral", "text": f"알 수 없는 커맨드({command_text})입니다."}
