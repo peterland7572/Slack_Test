@@ -125,7 +125,7 @@ def open_create_new_work_modal(trigger_id):
                 "type": "input",
                 "block_id": "start_date",
                 "element": {
-                    "type": "date_picker",
+                    "type": "datepicker",
                     "action_id": "start_date_input",
                     "placeholder": {
                         "type": "plain_text",
@@ -142,7 +142,7 @@ def open_create_new_work_modal(trigger_id):
                 "type": "input",
                 "block_id": "end_date",
                 "element": {
-                    "type": "date_picker",
+                    "type": "datepicker",
                     "action_id": "end_date_input",
                     "placeholder": {
                         "type": "plain_text",
