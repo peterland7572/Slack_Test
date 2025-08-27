@@ -267,31 +267,31 @@ def interactions():
             {
                 "type": "section",
                 "fields": [
-                    {"type": "mrkdwn", "text": f"*제목:*\t{title}"},
+                    {"type": "mrkdwn", "text": f"- *제목:*\n\t{title}"},
                 ]
             },
             {
                 "type": "section",
                 "fields": [
-                    {"type": "mrkdwn", "text": f"*내용:*\n{content}"}
+                    {"type": "mrkdwn", "text": f"- *내용:*\n\t{content}"}
                 ]
             },
             {
                 "type": "section",
                 "fields": [
-                    {"type": "mrkdwn", "text": f"*기간:*\t{period}"}
+                    {"type": "mrkdwn", "text": f"- *기간:*\n\t{period}"}
                 ]
             },
             {
                 "type": "section",
                 "fields": [
-                    {"type": "mrkdwn", "text": f"*기획서:*\n{plan_url if plan_url else '없음'}"}
+                    {"type": "mrkdwn", "text": f"- *기획서:*\n\t{plan_url if plan_url else '없음'}"}
                 ]
             },
             {
                 "type": "section",
                 "fields": [
-                    {"type": "mrkdwn", "text": f"*담당자:*\n<@{assignee_user_id}>"}
+                    {"type": "mrkdwn", "text": f"- *담당자:*\n\t<@{assignee_user_id}>"}
                 ]
             }
         ]
