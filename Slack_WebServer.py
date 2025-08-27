@@ -261,13 +261,13 @@ def interactions():
         blocks = [
             {
                 "type": "section",
-                "text": {"type": "mrkdwn", "text": f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n*<{prefix}업무 요청>*"}
+                "text": {"type": "mrkdwn", "text": f"\n*<{prefix}업무 요청>*"}
             },
             {"type": "divider"},
             {
                 "type": "section",
                 "fields": [
-                    {"type": "mrkdwn", "text": f"*제목:*\n{title}"},
+                    {"type": "mrkdwn", "text": f"*제목:*\t{title}"},
                 ]
             },
             {
@@ -279,7 +279,7 @@ def interactions():
             {
                 "type": "section",
                 "fields": [
-                    {"type": "mrkdwn", "text": f"*기간:*\n{period}"}
+                    {"type": "mrkdwn", "text": f"*기간:*\t{period}"}
                 ]
             },
             {
@@ -293,10 +293,6 @@ def interactions():
                 "fields": [
                     {"type": "mrkdwn", "text": f"*담당자:*\n<@{assignee_user_id}>"}
                 ]
-            },
-            {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": "┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛"}
             }
         ]
 
