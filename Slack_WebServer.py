@@ -120,6 +120,42 @@ def open_create_new_work_modal(trigger_id):
                 },
                 "label": {"type": "plain_text", "text": "내용"},
             },
+
+            {
+                "type": "input",
+                "block_id": "start_date",
+                "element": {
+                    "type": "date_picker",
+                    "action_id": "start_date_input",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "시작일 선택"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "시작일"
+                },
+                "optional": False,
+            },
+            {
+                "type": "input",
+                "block_id": "end_date",
+                "element": {
+                    "type": "date_picker",
+                    "action_id": "end_date_input",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "종료일 선택"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "종료일"
+                },
+                "optional": False,
+            },
+
             {
                 "type": "input",
                 "block_id": "period",
