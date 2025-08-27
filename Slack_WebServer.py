@@ -259,11 +259,11 @@ def interactions():
         prefix = PREFIX_MAP.get(work_type, "")
 
         blocks = [
+            {"type": "divider"},
             {
                 "type": "section",
                 "text": {"type": "mrkdwn", "text": f"\n*<{prefix}업무 요청>*"}
             },
-            {"type": "divider"},
             {
                 "type": "section",
                 "fields": [
@@ -293,7 +293,8 @@ def interactions():
                 "fields": [
                     {"type": "mrkdwn", "text": f"- *담당자:*\n<@{assignee_user_id}>"}
                 ]
-            }
+            },
+            {"type": "divider"},
         ]
 
         headers = {
