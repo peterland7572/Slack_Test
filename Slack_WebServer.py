@@ -256,21 +256,44 @@ def interactions():
         else:
             period = "기간 미설정"
 
-        mention_text = f"<@{assignee_user_id}>"
         prefix = PREFIX_MAP.get(work_type, "")
 
-        text_message = (
-            f"< *{prefix}업무 요청* >\n"
-            f"• 제목: {title}\n"
-            f"• 내용: {content}\n"
-            f"• 기간: {period}\n"
-            f"• 기획서: {plan_url if plan_url else '없음'}\n"
-            f"• 담당자: {mention_text}"
-        )
+        blocks = [
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": f"< *{prefix}업무 요청* >"}
+            },
+            {"type": "divider"},
+            {
+                "type": "section",
+                "fields": [
+                    {"type": "mrkdwn", "text": f"*제목:*\n{title}"},
+                    {"type": "mrkdwn", "text": f"*내용:*\n{content}"}
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {"type": "mrkdwn", "text": f"*기간:*\n{period}"},
+                    {"type": "mrkdwn", "text": f"*기획서:*\n{plan_url if plan_url else '없음'}"}
+                ]
+            },
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": f"*담당자:*\n<@{assignee_user_id}>"}
+            }
+        ]
 
-        headers = {"Authorization": f"Bearer {SLACK_BOT_TOKEN}", "Content-Type": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
+            "Content-Type": "application/json"
+        }
         target_channel = CHANNEL_MAP.get(work_type, TARGET_CHANNEL)
-        payload = {"channel": target_channel, "text": text_message}
+        payload = {
+            "channel": target_channel,
+            "blocks": blocks,
+            "text": f"{prefix}업무 요청: {title}"  # fallback 텍스트
+        }
 
         response = requests.post(f"{SLACK_API_URL}/chat.postMessage", headers=headers, json=payload)
         if response.status_code == 200:
@@ -281,6 +304,7 @@ def interactions():
             return jsonify({"response_action": "errors", "errors": {"title": "메시지 전송 실패"}})
 
     return "", 200
+
 
 
 if __name__ == "__main__":
