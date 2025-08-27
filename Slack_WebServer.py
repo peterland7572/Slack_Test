@@ -53,6 +53,11 @@ WORK_TYPE_OPTIONS = {
 
 PREFIX_MAP = {k: f"{v}-" for k, v in WORK_TYPE_OPTIONS.items()}
 
+# 기획리뷰 채널
+MEETING_REQUEST_CHANNEL = "C09BZMY6DEK"
+
+DEFAULT_CC_USER_IDS = ["U08KGSM1KUH","U08KGSM1KUH","U08KGSM1KUH"]# 예: ["UAAAAAAA1","UBBBBBBB2","UCCCCCCC3"]
+
 def get_all_members():
     logger.info("Slack 전체 멤버 조회 시작")
     base_url = f"{SLACK_API_URL}/users.list"
@@ -311,90 +316,96 @@ def slash_command_router():
 
 @app.route("/slack/interactions", methods=["POST"])
 def interactions():
-    logger.info(f"interactions1")
+    logger.info("interactions1")
     payload_str = request.form.get("payload")
     if not payload_str:
         return "", 400
     data = json.loads(payload_str)
-    logger.info(f"interactions2")
-    if data.get("type") == "view_submission" and data.get("view", {}).get("callback_id") == "work_create_modal":
+    logger.info("interactions2")
+
+    if data.get("type") == "view_submission":
+        callback_id = data.get("view", {}).get("callback_id")
         state_values = data["view"]["state"]["values"]
 
-        work_type = state_values["work_type"]["work_type_select"]["selected_option"]["value"]
-        title = state_values["title"]["title_input"]["value"]
-        content = state_values["content"]["content_input"]["value"]
-        plan_url = state_values["plan_url"]["plan_url_input"].get("value", "")
-        assignee_user_id = state_values["assignee"]["assignee_input"]["selected_user"]
+        # 1) 기존 업무 생성 모달 처리
+        if callback_id == "work_create_modal":
+            work_type = state_values["work_type"]["work_type_select"]["selected_option"]["value"]
+            title = state_values["title"]["title_input"]["value"]
+            content = state_values["content"]["content_input"]["value"]
+            plan_url = state_values["plan_url"]["plan_url_input"].get("value", "")
+            assignee_user_id = state_values["assignee"]["assignee_input"]["selected_user"]
 
-        # 시작일, 종료일 받아오기
-        start_date = state_values.get("start_date", {}).get("start_date_input", {}).get("selected_date", "")
-        end_date = state_values.get("end_date", {}).get("end_date_input", {}).get("selected_date", "")
-        if start_date and end_date:
-            period = f"{start_date} ~ {end_date}"
-        else:
-            period = "기간 미설정"
+            start_date = state_values.get("start_date", {}).get("start_date_input", {}).get("selected_date", "")
+            end_date = state_values.get("end_date", {}).get("end_date_input", {}).get("selected_date", "")
+            period = f"{start_date} ~ {end_date}" if start_date and end_date else "기간 미설정"
 
-        prefix = PREFIX_MAP.get(work_type, "")
+            prefix = PREFIX_MAP.get(work_type, "")
 
-        blocks = [
-            {"type": "divider"},
-            {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": f"*<{prefix}업무 요청>*"}
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {"type": "mrkdwn", "text": f"- *제목:*\n{title}"},
-                ]
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {"type": "mrkdwn", "text": f"- *내용:*\n{content}"}
-                ]
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {"type": "mrkdwn", "text": f"- *기간:*\n{period}"}
-                ]
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {"type": "mrkdwn", "text": f"- *기획서:*\n{plan_url if plan_url else '없음'}"}
-                ]
-            },
-            {
-                "type": "section",
-                "fields": [
-                    {"type": "mrkdwn", "text": f"- *담당자:*\n<@{assignee_user_id}>"}
-                ]
-            },
-            {"type": "divider"},
-        ]
+            blocks = [
+                {"type": "divider"},
+                {"type": "section","text": {"type": "mrkdwn","text": f"*<{prefix}업무 요청>*"}},
+                {"type": "section","fields": [{"type": "mrkdwn","text": f"- *제목:*\n{title}"}]},
+                {"type": "section","fields": [{"type": "mrkdwn","text": f"- *내용:*\n{content}"}]},
+                {"type": "section","fields": [{"type": "mrkdwn","text": f"- *기간:*\n{period}"}]},
+                {"type": "section","fields": [{"type": "mrkdwn","text": f"- *기획서:*\n{plan_url if plan_url else '없음'}"}]},
+                {"type": "section","fields": [{"type": "mrkdwn","text": f"- *담당자:*\n<@{assignee_user_id}>"}]},
+                {"type": "divider"},
+            ]
 
-        headers = {
-            "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
-            "Content-Type": "application/json"
-        }
-        target_channel = CHANNEL_MAP.get(work_type, TARGET_CHANNEL)
-        payload = {
-            "channel": target_channel,
-            "blocks": blocks,
-            "text": f"{prefix}업무 요청: {title}"  # fallback 텍스트
-        }
+            headers = {"Authorization": f"Bearer {SLACK_BOT_TOKEN}", "Content-Type": "application/json"}
+            target_channel = CHANNEL_MAP.get(work_type, TARGET_CHANNEL)
+            payload = {"channel": target_channel, "blocks": blocks, "text": f"{prefix}업무 요청: {title}"}
+            response = requests.post(f"{SLACK_API_URL}/chat.postMessage", headers=headers, json=payload)
+            if response.status_code == 200:
+                logger.info("신규 잡 메시지 전송 성공")
+                return jsonify({"response_action": "clear"})
+            else:
+                logger.error(f"Slack 메시지 전송 실패: {response.text}")
+                return jsonify({"response_action": "errors", "errors": {"title": "메시지 전송 실패"}})
 
-        response = requests.post(f"{SLACK_API_URL}/chat.postMessage", headers=headers, json=payload)
-        if response.status_code == 200:
-            logger.info("신규 잡 메시지 전송 성공")
-            return jsonify({"response_action": "clear"})
-        else:
-            logger.error(f"Slack 메시지 전송 실패: {response.text}")
-            return jsonify({"response_action": "errors", "errors": {"title": "메시지 전송 실패"}})
+        # 2) 모임요청 모달 처리
+        elif callback_id == "meeting_review_modal":
+            # 필드 추출: block_id / action_id는 모달을 만든 블록 정의와 정확히 일치해야 함
+            title = state_values["title"]["title_input"]["value"]
+            document = state_values.get("document", {}).get("document_input", {}).get("value", "")
+            content = state_values.get("content", {}).get("content_input", {}).get("value", "")
+            # 장소 블록을 모달에 추가했다면 다음과 같이 읽음(없다면 빈 문자열 처리)
+            place = state_values.get("place", {}).get("place_input", {}).get("value", "")
+
+            # 담당자: multi_users_select
+            assignees = state_values["assignee"]["assignee_input"].get("selected_users", [])
+            assignee_mentions = " ".join([f"<@{uid}>" for uid in assignees]) if assignees else "없음"
+
+            # 참조: 기본 3명(환경설정 권장)
+            default_refs = DEFAULT_CC_USER_IDS  # 예: ["UAAAAAAA1","UBBBBBBB2","UCCCCCCC3"]
+            cc_mentions = " ".join([f"<@{uid}>" for uid in default_refs])
+
+            # 메시지 텍스트(요청하신 형식)
+            # 굵게/각괄호/화살괄호 등은 mrkdwn에서 그대로 표시 가능
+            lines = [
+                "**[기획 리뷰 요청드립니다.]**",
+                f"제목: << {title} >>",
+                f"기획서: {document if document else '없음'}",
+                f"내용: {content if content else '없음'}",
+                f"장소: {place if place else '미정'}",
+                f"담당자: {assignee_mentions}",
+                f"참조: {cc_mentions}",
+            ]
+            msg_text = "\n".join(lines)
+
+            headers = {"Authorization": f"Bearer {SLACK_BOT_TOKEN}", "Content-Type": "application/json"}
+            target_channel = MEETING_REQUEST_CHANNEL  # 모임요청을 보낼 채널
+            payload = {"channel": target_channel, "text": msg_text}
+            response = requests.post(f"{SLACK_API_URL}/chat.postMessage", headers=headers, json=payload)
+            if response.status_code == 200:
+                logger.info("모임요청 메시지 전송 성공")
+                return jsonify({"response_action": "clear"})
+            else:
+                logger.error(f"슬랙 모임요청 메시지 전송 실패: {response.text}")
+                return jsonify({"response_action": "errors", "errors": {"title": "메시지 전송 실패"}})
 
     return "", 200
+
 
 
 
