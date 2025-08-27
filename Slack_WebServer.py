@@ -223,12 +223,12 @@ def interactions():
         plan_url = state_values["plan_url"]["plan_url_input"].get("value", "")
         assignee_user_id = state_values["assignee"]["assignee_input"]["selected_user"]
 
-        title_with_prefix = f"{PREFIX_MAP.get(work_type, '')}{title}"
         mention_text = f"<@{assignee_user_id}>"
+        prefix = PREFIX_MAP.get(work_type, "")
+
         text_message = (
-            f"*업무 요청*\n"
-            f"• 유형: {WORK_TYPE_OPTIONS.get(work_type, '')}\n"
-            f"• 제목: {title_with_prefix}\n"
+            f"< *{prefix}업무 요청* >\n"
+            f"• 제목: {title}\n"
             f"• 내용: {content}\n"
             f"• 기간: {period}\n"
             f"• 기획서: {plan_url if plan_url else '없음'}\n"
