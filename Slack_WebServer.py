@@ -244,6 +244,16 @@ def slash_command_router():
             "blocks": [
                 {
                     "type": "input",
+                    "block_id": "title",
+                    "element": {
+                        "type": "plain_text_input",
+                        "action_id": "title_input",
+                    },
+                    "label": {"type": "plain_text", "text": "제목"},
+                    "optional": False,
+                },
+                {
+                    "type": "input",
                     "block_id": "assignee",
                     "element": {
                         "type": "multi_users_select",
@@ -251,16 +261,6 @@ def slash_command_router():
                         "placeholder": {"type": "plain_text", "text": "담당자를 선택하세요"},
                     },
                     "label": {"type": "plain_text", "text": "담당자"},
-                    "optional": False,
-                },
-                {
-                    "type": "input",
-                    "block_id": "title",
-                    "element": {
-                        "type": "plain_text_input",
-                        "action_id": "title_input",
-                    },
-                    "label": {"type": "plain_text", "text": "제목"},
                     "optional": False,
                 },
                 {
