@@ -84,7 +84,7 @@ def open_create_new_work_modal(trigger_id):
     modal_view = {
         "type": "modal",
         "callback_id": "work_create_modal",
-        "title": {"type": "plain_text", "text": "새 업무 등록"},
+        "title": {"type": "plain_text", "text": "새 업무 요청"},
         "submit": {"type": "plain_text", "text": "등록"},
         "close": {"type": "plain_text", "text": "취소"},
         "blocks": [
