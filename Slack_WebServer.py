@@ -127,6 +127,7 @@ def open_create_new_work_modal(trigger_id):
                 "element": {
                     "type": "datepicker",
                     "action_id": "start_date_input",
+                    "optional": True,
                     "placeholder": {
                         "type": "plain_text",
                         "text": "시작일 선택"
@@ -140,6 +141,7 @@ def open_create_new_work_modal(trigger_id):
             {
                 "type": "input",
                 "block_id": "end_date",
+                "optional": True,
                 "element": {
                     "type": "datepicker",
                     "action_id": "end_date_input",
