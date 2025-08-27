@@ -261,26 +261,42 @@ def interactions():
         blocks = [
             {
                 "type": "section",
-                "text": {"type": "mrkdwn", "text": f"< *{prefix}업무 요청* >"}
+                "text": {"type": "mrkdwn", "text": f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n*<{prefix}업무 요청>*"}
             },
             {"type": "divider"},
             {
                 "type": "section",
                 "fields": [
                     {"type": "mrkdwn", "text": f"*제목:*\n{title}"},
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
                     {"type": "mrkdwn", "text": f"*내용:*\n{content}"}
                 ]
             },
             {
                 "type": "section",
                 "fields": [
-                    {"type": "mrkdwn", "text": f"*기간:*\n{period}"},
+                    {"type": "mrkdwn", "text": f"*기간:*\n{period}"}
+                ]
+            },
+            {
+                "type": "section",
+                "fields": [
                     {"type": "mrkdwn", "text": f"*기획서:*\n{plan_url if plan_url else '없음'}"}
                 ]
             },
             {
                 "type": "section",
-                "text": {"type": "mrkdwn", "text": f"*담당자:*\n<@{assignee_user_id}>"}
+                "fields": [
+                    {"type": "mrkdwn", "text": f"*담당자:*\n<@{assignee_user_id}>"}
+                ]
+            },
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": "┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛"}
             }
         ]
 
