@@ -239,6 +239,19 @@ def slash_command_router():
             "blocks": [
                 {
                     "type": "input",
+                    "block_id": "dummy_focus",
+                    "element": {
+                        "type": "plain_text_input",
+                        "action_id": "dummy_focus_input",
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": " "
+                    },
+                    "optional": True,
+                },
+                {
+                    "type": "input",
                     "block_id": "assignee",
                     "element": {
                         "type": "multi_users_select",
