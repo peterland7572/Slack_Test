@@ -135,8 +135,7 @@ def open_create_new_work_modal(trigger_id):
                 "label": {
                     "type": "plain_text",
                     "text": "시작일"
-                },
-                "optional": False,
+                }
             },
             {
                 "type": "input",
@@ -152,16 +151,7 @@ def open_create_new_work_modal(trigger_id):
                 "label": {
                     "type": "plain_text",
                     "text": "종료일"
-                },
-                "optional": False,
-            },
-
-            {
-                "type": "input",
-                "block_id": "period",
-                "element": {"type": "plain_text_input", "action_id": "period_input"},
-                "label": {"type": "plain_text", "text": "기간"},
-                "optional": True,
+                }
             },
             {
                 "type": "input",
@@ -255,9 +245,16 @@ def interactions():
         work_type = state_values["work_type"]["work_type_select"]["selected_option"]["value"]
         title = state_values["title"]["title_input"]["value"]
         content = state_values["content"]["content_input"]["value"]
-        period = state_values["period"]["period_input"]["value"]
         plan_url = state_values["plan_url"]["plan_url_input"].get("value", "")
         assignee_user_id = state_values["assignee"]["assignee_input"]["selected_user"]
+
+        # 시작일, 종료일 받아오기
+        start_date = state_values.get("start_date", {}).get("start_date_input", {}).get("selected_date", "")
+        end_date = state_values.get("end_date", {}).get("end_date_input", {}).get("selected_date", "")
+        if start_date and end_date:
+            period = f"{start_date} ~ {end_date}"
+        else:
+            period = "기간 미설정"
 
         mention_text = f"<@{assignee_user_id}>"
         prefix = PREFIX_MAP.get(work_type, "")
