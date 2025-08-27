@@ -91,7 +91,7 @@ def open_create_new_work_modal(trigger_id):
             {
                 "type": "input",
                 "block_id": "work_type",
-                "label": {"type": "plain_text", "text": "업무 유형"},
+                "label": {"type": "plain_text", "text": "담당 부서"},
                 "element": {
                     "type": "static_select",
                     "action_id": "work_type_select",
