@@ -262,7 +262,7 @@ def interactions():
             {"type": "divider"},
             {
                 "type": "section",
-                "text": {"type": "mrkdwn", "text": f"\n*<{prefix}업무 요청>*"}
+                "text": {"type": "mrkdwn", "text": f"*<{prefix}업무 요청>*"}
             },
             {
                 "type": "section",
