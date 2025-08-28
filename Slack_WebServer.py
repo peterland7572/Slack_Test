@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
 SLACK_API_URL = "https://slack.com/api"
 
+JIRA_URL = os.environ.get("JIRA_URL")
+JIRA_API_TOKEN = os.environ.get("JIRA_API_TOKEN")
+
 
 # 업무 유형 → 슬랙 채널 ID 매핑 (예시, 실제 채널 ID로 변경 필요)
 CHANNEL_MAP = {
@@ -189,6 +192,137 @@ def open_create_new_work_modal(trigger_id):
     logger.info(f"모달 열기 응답: {response.text}")
     return response.json()
 
+def open_create_jira_issue_create_modal(trigger_id):
+    modal_view = {
+        "type": "modal",
+        "callback_id": "jira_issue_create_modal",
+        "title": {"type": "plain_text", "text": "Jira 이슈 생성"},
+        "submit": {"type": "plain_text", "text": "생성"},
+        "close": {"type": "plain_text", "text": "취소"},
+        "blocks": [
+            {
+                "type": "input",
+                "block_id": "summary",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "summary_input",
+                    "placeholder": {"type": "plain_text", "text": "이슈 제목 입력"}
+                },
+                "label": {"type": "plain_text", "text": "제목"},
+                "optional": False
+            },
+            {
+                "type": "input",
+                "block_id": "description",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "description_input",
+                    "multiline": True,
+                    "placeholder": {"type": "plain_text", "text": "이슈 상세 설명"}
+                },
+                "label": {"type": "plain_text", "text": "설명"},
+                "optional": True
+            },
+            {
+                "type": "input",
+                "block_id": "project",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "project_input",
+                    "placeholder": {"type": "plain_text", "text": "프로젝트 키 입력 (예: PROJ)"}
+                },
+                "label": {"type": "plain_text", "text": "프로젝트 키"},
+                "optional": False
+            },
+            {
+                "type": "input",
+                "block_id": "issuetype",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "issuetype_input",
+                    "placeholder": {"type": "plain_text", "text": "이슈 타입 입력 (예: Task)"}
+                },
+                "label": {"type": "plain_text", "text": "이슈 타입"},
+                "optional": False
+            }
+        ]
+    }
+
+    headers = {
+        "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
+        "Content-Type": "application/json; charset=utf-8"
+    }
+    payload = {
+        "trigger_id": trigger_id,
+        "view": modal_view
+    }
+    response = requests.post(f"{SLACK_API_URL}/views.open", headers=headers, json=payload)
+    logger.info(f"Jira 이슈 생성 모달 열기 응답: {response.text}")
+    return response.json()
+
+def open_meeting_request_modal(trigger_id):
+    modal_view = {
+        "type": "modal",
+        "callback_id": "meeting_review_modal",
+        "title": {"type": "plain_text", "text": "모임요청"},
+        "submit": {"type": "plain_text", "text": "보내기"},
+        "close": {"type": "plain_text", "text": "취소"},
+        "blocks": [
+            {
+                "type": "input",
+                "block_id": "title",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "title_input",
+                },
+                "label": {"type": "plain_text", "text": "제목"},
+                "optional": False,
+            },
+            {
+                "type": "input",
+                "block_id": "assignee",
+                "element": {
+                    "type": "multi_users_select",
+                    "action_id": "assignee_input",
+                    "placeholder": {"type": "plain_text", "text": "담당자를 선택하세요"},
+                },
+                "label": {"type": "plain_text", "text": "담당자"},
+                "optional": False,
+            },
+            {
+                "type": "input",
+                "block_id": "document",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "document_input",
+                },
+                "label": {"type": "plain_text", "text": "기획서 링크"},
+                "optional": True,
+            },
+            {
+                "type": "input",
+                "block_id": "content",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "content_input",
+                    "multiline": True,
+                },
+                "label": {"type": "plain_text", "text": "내용"},
+                "optional": True,
+            },
+        ],
+    }
+
+    headers = {
+        "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
+        "Content-Type": "application/json; charset=utf-8"
+    }
+    payload = {"trigger_id": trigger_id, "view": modal_view}
+    response = requests.post(f"{SLACK_API_URL}/views.open", headers=headers, json=payload)
+    logger.info(f"모임요청 모달 열기 응답: {response.text}")
+    return response.json()
+
+
 
 @app.route("/slack/command", methods=["POST"])
 def slash_command_router():
@@ -232,82 +366,42 @@ def slash_command_router():
                 "text": "trigger_id가 없습니다. Slack 인터랙티브 명령에서만 동작합니다.",
             }
         )
-    elif command_text == "/모임요청":
-        logger.info("/모임요청 진입")
-
-        modal_view = {
-            "type": "modal",
-            "callback_id": "meeting_review_modal",
-            "title": {"type": "plain_text", "text": "모임요청"},
-            "submit": {"type": "plain_text", "text": "보내기"},
-            "close": {"type": "plain_text", "text": "취소"},
-            "blocks": [
-                {
-                    "type": "input",
-                    "block_id": "title",
-                    "element": {
-                        "type": "plain_text_input",
-                        "action_id": "title_input",
-                    },
-                    "label": {"type": "plain_text", "text": "제목"},
-                    "optional": False,
-                },
-                {
-                    "type": "input",
-                    "block_id": "assignee",
-                    "element": {
-                        "type": "multi_users_select",
-                        "action_id": "assignee_input",
-                        "placeholder": {"type": "plain_text", "text": "담당자를 선택하세요"},
-                    },
-                    "label": {"type": "plain_text", "text": "담당자"},
-                    "optional": False,
-                },
-                {
-                    "type": "input",
-                    "block_id": "document",
-                    "element": {
-                        "type": "plain_text_input",
-                        "action_id": "document_input",
-                    },
-                    "label": {"type": "plain_text", "text": "기획서 링크"},
-                    "optional": True,
-                },
-                {
-                    "type": "input",
-                    "block_id": "content",
-                    "element": {
-                        "type": "plain_text_input",
-                        "action_id": "content_input",
-                        "multiline": True,
-                    },
-                    "label": {"type": "plain_text", "text": "내용"},
-                    "optional": True,
-                },
-            ],
-        }
-
-        headers = {
-            "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
-            "Content-Type": "application/json; charset=utf-8",
-        }
-        payload = {
-            "trigger_id": trigger_id,
-            "view": modal_view,
-        }
-
-        response = requests.post(f"{SLACK_API_URL}/views.open", headers=headers, json=payload)
-        logger.info(f"모임요청 모달 열기 응답: {response.text}")
-
-        if response.status_code == 200 and response.json().get("ok"):
-            return "", 200
-        else:
-            error_msg = response.json().get("error", "알 수 없는 오류")
-            logger.error(f"모임요청 모달 열기 실패: {error_msg}")
+    elif command_text == "/jira_issue_create":
+        logger.info(f"/jira_issue_create")
+        if not trigger_id:
             return jsonify({
                 "response_type": "ephemeral",
-                "text": f"모임 요청 모달을 띄우는 데 실패했습니다: {error_msg}"
-            }), 500
+                "text": "trigger_id가 필요합니다. Slack 인터랙티브 명령에서만 동작합니다."
+            })
+
+        modal_resp = open_create_jira_issue_create_modal(trigger_id)
+        if not modal_resp.get("ok"):
+            return jsonify({
+                "response_type": "ephemeral",
+                "text": f"모달을 띄우는 데 실패했습니다: {modal_resp.get('error')}"
+            })
+        return "", 200
+
+    if command_text == "/모임요청":
+
+        if not trigger_id:
+            return jsonify({
+                "response_type": "ephemeral",
+                "text": "trigger_id가 필요합니다."
+            }), 200
+
+        modal_resp = open_meeting_request_modal(trigger_id)
+
+        if not modal_resp.get("ok"):
+            return jsonify({
+
+                "response_type": "ephemeral",
+
+                "text": f"모달 열기에 실패했습니다: {modal_resp.get('error')}"
+
+            }), 200
+
+        return "", 200
 
     return jsonify(
         {"response_type": "ephemeral", "text": f"알 수 없는 커맨드({command_text})입니다."}
