@@ -1,7 +1,6 @@
 import os
 import logging
 import json
-import base64
 import requests
 from flask import Flask, request, jsonify
 
@@ -382,7 +381,7 @@ def slash_command_router():
             })
         return "", 200
 
-    if command_text == "/모임요청":
+    elif command_text == "/모임요청":
 
         if not trigger_id:
             return jsonify({
