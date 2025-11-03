@@ -435,15 +435,28 @@ def interactions():
             period = f"{start_date} ~ {end_date}" if start_date and end_date else "기간 미설정"
 
             prefix = PREFIX_MAP.get(work_type, "")
-
+            # 멘션 문자열로 변환
+            cc_mentions = " ".join([f"<@{uid}>" for uid in DEFAULT_CC_USER_IDS])
             blocks = [
                 {"type": "divider"},
-                {"type": "section","text": {"type": "mrkdwn","text": f"*<{prefix}업무 요청>*"}},
-                {"type": "section","fields": [{"type": "mrkdwn","text": f"- *제목:*\n{prefix}{title}"}]},
-                {"type": "section","fields": [{"type": "mrkdwn","text": f"- *내용:*\n{content}"}]},
-                {"type": "section","fields": [{"type": "mrkdwn","text": f"- *기간:*\n{period}"}]},
-                {"type": "section","fields": [{"type": "mrkdwn","text": f"- *기획서:*\n{plan_url if plan_url else '없음'}"}]},
-                {"type": "section","fields": [{"type": "mrkdwn","text": f"- *담당자:*\n<@{assignee_user_id}>"}]},
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": f"{cc_mentions}\n*지라 일감 요청드립니다!*"},
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": (
+                            f"*<{prefix}업무 요청>*\n"
+                            f"*제목:* {prefix}{title}\n"
+                            f"*내용:* {content}\n"
+                            f"*기간:* {period}\n"
+                            f"*기획서:* {plan_url if plan_url else '없음'}\n"
+                            f"*담당자:* <@{assignee_user_id}>"
+                        ),
+                    },
+                },
                 {"type": "divider"},
             ]
 
