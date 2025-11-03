@@ -376,7 +376,7 @@ def slash_command_router():
     logger.info(f"Slash Command 요청: {data}")
 
         #  Heartbeat 커맨드 추가
-    if command == "/heartbeat":
+    if command_text == "/heartbeat":
         logger.info("💓 Heartbeat 요청 수신됨")
         return jsonify({"status": "alive"}), 200
         
