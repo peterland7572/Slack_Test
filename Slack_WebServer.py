@@ -322,6 +322,32 @@ def open_meeting_request_modal(trigger_id):
     logger.info(f"모임요청 모달 열기 응답: {response.text}")
     return response.json()
 
+# 필요 권한: conversations:read
+def dm_channel_to_user_id(conversations_client, channel_id):
+    # conversations.info로 IM 채널 정보 조회하면 'user' 필드에 상대방 user id가 있습니다.
+    resp = conversations_client.conversations_info(channel=channel_id)
+    if not resp.get("ok"):
+        raise RuntimeError(f"conversations.info 실패: {resp.get('error')}")
+    channel = resp.get("channel", {})
+    # IM(D...) 채널이면 'user' 키에 상대 사용자(U...)가 들어있음
+    return channel.get("user")
+
+# 예: DEFAULT_CC_IDS 안에 D... 가 섞여 있을 때 정규화
+def normalize_cc_user_ids(client, default_cc_ids):
+    normalized = []
+    for cid in default_cc_ids:
+        if cid.startswith("D"):  # DM 채널 ID라면 사용자 ID로 변환
+            try:
+                user_id = dm_channel_to_user_id(client, cid)
+                if user_id:
+                    normalized.append(user_id)
+            except Exception as e:
+                # 실패하면 원래 ID 보존하지 말고 로깅
+                logger.warning(f"DM->user 변환 실패 {cid}: {e}")
+        else:
+            # 이미 U... 형식이라면 그대로 추가
+            normalized.append(cid)
+    return normalized
 
 
 @app.route("/slack/command", methods=["POST"])
@@ -435,8 +461,10 @@ def interactions():
             period = f"{start_date} ~ {end_date}" if start_date and end_date else "기간 미설정"
 
             prefix = PREFIX_MAP.get(work_type, "")
-            # 멘션 문자열로 변환
-            cc_mentions = " ".join([f"<@{uid}>" for uid in DEFAULT_CC_USER_IDS])
+            
+            # conversations_client는 slack_sdk WebClient 예: WebClient(token=SLACK_BOT_TOKEN)
+            normalized = normalize_cc_user_ids(conversations_client, DEFAULT_CC_USER_IDS)
+            cc_mentions = " ".join([f"<@{uid}>" for uid in normalized])
             blocks = [
                 {"type": "divider"},
                 {
