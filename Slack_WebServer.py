@@ -375,20 +375,11 @@ def slash_command_router():
     trigger_id = data.get("trigger_id")
     logger.info(f"Slash Command 요청: {data}")
 
-    if command_text == "/hi":
-        members = get_all_members()
-        mentions = [
-            f"<@{m.get('id')}> HI"
-            for m in members
-            if not m.get("deleted") and not m.get("is_bot")
-        ]
-        MAX_CHARS = 3000
-        mentions_text = "\n".join(mentions)
-        if len(mentions_text) > MAX_CHARS:
-            mentions_text = mentions_text[:MAX_CHARS] + "\n... (이하 생략)"
-        response_text = f"hi {user_name}! 전체 멤버에게 인사합니다:\n{mentions_text}"
-        logger.info(f"응답 메시지 길이: {len(response_text)}")
-        return jsonify({"response_type": "in_channel", "text": response_text})
+        #  Heartbeat 커맨드 추가
+    if command == "/heartbeat":
+        logger.info("💓 Heartbeat 요청 수신됨")
+        return jsonify({"status": "alive"}), 200
+        
 
     elif command_text == "/create_new_work":
         logger.info(f"/create_new_work 호출 by {user_id}")
