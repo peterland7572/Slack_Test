@@ -539,7 +539,6 @@ def interactions():
                 f"제목: << {title} >>",
                 f"기획서: {document if document else '없음'}",
                 f"내용: {content if content else '없음'}",
-                f"장소: {place if place else '미정'}",
                 f"담당자: {assignee_mentions}",
                 f"참조: {cc_mentions}",
             ]
