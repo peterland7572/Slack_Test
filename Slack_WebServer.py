@@ -62,7 +62,7 @@ PREFIX_MAP = {k: f"{v}-" for k, v in WORK_TYPE_OPTIONS.items()}
 # 기획리뷰 채널
 MEETING_REQUEST_CHANNEL = "C09QF1TKQQ4"
 
-DEFAULT_CC_USER_IDS = ["D09R5VD28EL","D09PWKDFK8X","D09Q9B04NF8"]# 예: 홍석기,노승한,김주현 PM님들
+DEFAULT_CC_USER_IDS = ["D09R5VD28EL","D09PWKDFK8X","U09Q7GTU0BU"]# 예: 홍석기,노승한,김주현 PM님들
 
 def get_all_members():
     logger.info("Slack 전체 멤버 조회 시작")
