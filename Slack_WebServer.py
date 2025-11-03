@@ -3,6 +3,7 @@ import logging
 import json
 import requests
 from flask import Flask, request, jsonify
+from slack_sdk import WebClient
 
 app = Flask(__name__)
 
@@ -11,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
 SLACK_API_URL = "https://slack.com/api"
+conversations_client = WebClient(token=SLACK_BOT_TOKEN)
+
 
 JIRA_URL = os.environ.get("JIRA_URL")
 JIRA_API_TOKEN = os.environ.get("JIRA_API_TOKEN")
