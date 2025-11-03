@@ -4,6 +4,7 @@ import json
 import requests
 from flask import Flask, request, jsonify
 from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
 app = Flask(__name__)
 
@@ -336,22 +337,34 @@ def dm_channel_to_user_id(conversations_client, channel_id):
     return channel.get("user")
 
 # 예: DEFAULT_CC_IDS 안에 D... 가 섞여 있을 때 정규화
-def normalize_cc_user_ids(client, default_cc_ids):
-    normalized = []
-    for cid in default_cc_ids:
-        if cid.startswith("D"):  # DM 채널 ID라면 사용자 ID로 변환
-            try:
-                user_id = dm_channel_to_user_id(client, cid)
-                if user_id:
-                    normalized.append(user_id)
-            except Exception as e:
-                # 실패하면 원래 ID 보존하지 말고 로깅
-                logger.warning(f"DM->user 변환 실패 {cid}: {e}")
-        else:
-            # 이미 U... 형식이라면 그대로 추가
-            normalized.append(cid)
-    return normalized
+def normalize_cc_user_ids(conversations_client: WebClient, user_ids: list[str]) -> list[str]:
+    """유저 ID 목록을 받아 DM 채널을 열어 멘션 가능한 ID 리스트를 리턴한다"""
+    normalized_ids = []
 
+    for user_id in user_ids:
+        try:
+            # DM 채널 열기 (기존 conversations.info → conversations.open 으로 변경)
+            resp = conversations_client.conversations_open(users=[user_id])
+            if resp["ok"]:
+                normalized_ids.append(user_id)  # <@user_id> 형태로 Slack에서 렌더링됨
+            else:
+                logger.warning(f"DM open 실패 {user_id}: {resp}")
+        except SlackApiError as e:
+            logger.warning(
+                f"DM open 실패 {user_id}: {e.response['error'] if e.response else e}"
+            )
+
+    return normalized_ids
+
+def get_dm_channel_id(user_id: str):
+    try:
+        response = client.conversations_open(users=[user_id])
+        if response["ok"]:
+            return response["channel"]["id"]
+    except SlackApiError as e:
+        logger.warning(f"DM open 실패 {user_id}: {e.response['error']}")
+    return None
+    
 
 @app.route("/slack/command", methods=["POST"])
 def slash_command_router():
