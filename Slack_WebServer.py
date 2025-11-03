@@ -87,7 +87,7 @@ def get_all_members():
     logger.info("전체 멤버 수: %d", len(all_members))
     return all_members
 
-def open_create_new_work_modal(trigger_id):
+def open_create_new_work_modal(trigger_id, user_id):
     modal_view = {
         "type": "modal",
         "callback_id": "work_create_modal",
@@ -176,6 +176,7 @@ def open_create_new_work_modal(trigger_id):
                     "type": "users_select",
                     "action_id": "assignee_input",
                     "placeholder": {"type": "plain_text", "text": "담당자를 선택하세요"},
+                    "initial_user": user_id,  # 작성자를 기본 선택
                 },
                 "label": {"type": "plain_text", "text": "담당자 (실명)"},
             },
@@ -328,6 +329,7 @@ def slash_command_router():
     data = request.form.to_dict()
     command_text = data.get("command")
     user_name = data.get("user_name", "Guest")
+    user_id = data.get("user_id")  # 슬랙 사용자 ID 추출
     trigger_id = data.get("trigger_id")
     logger.info(f"Slash Command 요청: {data}")
 
@@ -347,9 +349,9 @@ def slash_command_router():
         return jsonify({"response_type": "in_channel", "text": response_text})
 
     elif command_text == "/create_new_work":
-        logger.info(f"/create_new_work")
+        logger.info(f"/create_new_work 호출 by {user_id}")
         if trigger_id:
-            modal_resp = open_create_new_work_modal(trigger_id)
+            modal_resp = open_create_new_work_modal(trigger_id, user_id) # trigger_id , user_id 전달
             if not modal_resp.get("ok"):
                 logger.error(f"Modal open 실패: {modal_resp.get('error')}")
                 return jsonify(
@@ -437,7 +439,7 @@ def interactions():
             blocks = [
                 {"type": "divider"},
                 {"type": "section","text": {"type": "mrkdwn","text": f"*<{prefix}업무 요청>*"}},
-                {"type": "section","fields": [{"type": "mrkdwn","text": f"- *제목:*\n{title}"}]},
+                {"type": "section","fields": [{"type": "mrkdwn","text": f"- *제목:*\n{prefix}{title}"}]},
                 {"type": "section","fields": [{"type": "mrkdwn","text": f"- *내용:*\n{content}"}]},
                 {"type": "section","fields": [{"type": "mrkdwn","text": f"- *기간:*\n{period}"}]},
                 {"type": "section","fields": [{"type": "mrkdwn","text": f"- *기획서:*\n{plan_url if plan_url else '없음'}"}]},
