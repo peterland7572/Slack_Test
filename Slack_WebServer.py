@@ -18,19 +18,19 @@ JIRA_API_TOKEN = os.environ.get("JIRA_API_TOKEN")
 
 # 업무 유형 → 슬랙 채널 ID 매핑 (예시, 실제 채널 ID로 변경 필요)
 CHANNEL_MAP = {
-    "client_task": "C09C4S28412",
-    "planning_task": "C09C4S28412",
-    "qa_task": "C09C4S28412",
-    "character_task": "C09C4S28412",
-    "background_task": "C09C4S28412",
-    "concept_task": "C09C4S28412",
-    "animation_task": "C09C4S28412",
-    "effect_task": "C09C4S28412",
-    "art_task": "C09C4S28412",
-    "server_task": "C09C4S28412",
-    "ta_task": "C09C4S28412",
-    "test_task": "C09C4S28412",
-    "ui_task": "C09C4S28412"
+    "client_task": "C09QEGZ4W92",
+    "planning_task": "C09PVGS3U31",
+    "qa_task": "C09Q4JY193M",
+    "character_task": "C09Q7H0QB0D",
+    "background_task": "C09Q4J03Y1Z",
+    "concept_task": "C09Q4JJ1AM9",
+    "animation_task": "C09QB1AJBCJ",
+    "effect_task": "C09QPTJ3KMX",
+#   "art_task": "C09C4S28412", # 주석처리
+    "server_task": "C09QB1H753L",
+    "ta_task": "C09Q7H3QA1K",
+    "test_task": "C09PWF7SGKH",
+    "ui_task": "C09QPTE5BSM"
 }
 
 # 기본 채널을 client_task 채널로 지정
@@ -46,7 +46,7 @@ WORK_TYPE_OPTIONS = {
     "concept_task": "컨셉",
     "animation_task": "애니",
     "effect_task": "VFX",
-    "art_task": "아트",
+#   "art_task": "아트", # 주석처리
     "server_task": "서버",
     "ta_task": "TA",
     "test_task": "테스트",
@@ -56,9 +56,9 @@ WORK_TYPE_OPTIONS = {
 PREFIX_MAP = {k: f"{v}-" for k, v in WORK_TYPE_OPTIONS.items()}
 
 # 기획리뷰 채널
-MEETING_REQUEST_CHANNEL = "C09BZMY6DEK"
+MEETING_REQUEST_CHANNEL = "C09QF1TKQQ4"
 
-DEFAULT_CC_USER_IDS = ["U08KGSM1KUH","U08KGSM1KUH","U08KGSM1KUH"]# 예: ["UAAAAAAA1","UBBBBBBB2","UCCCCCCC3"]
+DEFAULT_CC_USER_IDS = ["D09R5VD28EL","D09PWKDFK8X","D09Q9B04NF8"]# 예: 홍석기,노승한,김주현 PM님들
 
 def get_all_members():
     logger.info("Slack 전체 멤버 조회 시작")
